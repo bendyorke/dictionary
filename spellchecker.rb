@@ -13,35 +13,48 @@ class Spellchecker
 
   private
   def search_exact word = @word
-    @dictionary.fetch word.to_sym, nil
+    @dictionary.fetch word.to_sym, false
   end
 
   def search_no_vowels word = @word
     w_rd = sub_vowels word
-    @d_ctionary.fetch w_rd.to_sym, nil
+    @d_ctionary.fetch w_rd.to_sym, false
   end
 
   def remove_duplicates_and_search word = @word
-    collect_deviations([word])
+    collect_deviations(word)
       .each { |word| result = search_exact(word);     return result if result }
       .each { |word| result = search_no_vowels(word); return result if result }
-    return nil
+    collect_deviations(sub_vowels word)
+      .each { |word| result = search_no_vowels(word); return result if result }
+    return false
   end
 
-  def collect_deviations words
-    deviations =  words.map { |word| remove_one_of_each_duplication word }
-    deviations += deviations.map { |words| collect_deviations words }
-    deviations.flatten.uniq.sort_by { |deviation| -deviation.length }
+  def collect_deviations word
+    all_deviations = []
+    new_deviations = [word]
+
+    begin
+      all_deviations += new_deviations = new_deviations
+        .map { |word| remove_one_of_each_duplication word }
+        .flatten.uniq
+    end while double_letters_in new_deviations
+
+    all_deviations.flatten.uniq.sort { |a,b| b <=> a }
+  end
+
+  def double_letters_in words
+    words.grep(/([a-z])\1/).any?
   end
 
   def remove_one_of_each_duplication word
     (0..word.length - 2).collect do |i| 
-      if word[i] == word[i + 1]
-         _word = word.dup
-         _word.slice!(i)
-         _word
-      end
+      remove_at_index(word.dup, i) if word[i] == word[i + 1]
     end.uniq.compact
+  end
+
+  def remove_at_index word, index
+    word.slice!(index) and word
   end
 
   def sub_vowels word
@@ -68,3 +81,4 @@ if !STDIN.tty?
   checker = Spellchecker.new 
   STDOUT.write checker.correct(stdin) + "\n"
 end
+
