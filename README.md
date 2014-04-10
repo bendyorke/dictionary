@@ -21,3 +21,6 @@ Give each file executable permissions and you can run them like executables. i.e
 
 ##All together
 `$ ./dictionary.rb --pluck | ./misspeler.rb | ./spellchecker.rb`
+
+##Big-O
+Some benchmarks were set up in `big-o.rb`.  You can change the interval, steps, length of a word, etc and see how to build time and search time is for the spellchecker.  Ruby with `$ ruby big-o.rb`
